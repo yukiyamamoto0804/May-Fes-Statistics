@@ -1,0 +1,94 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 背景のオーバーレイ */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* 半透明の黒背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* ポップアップのコンテンツ */
+.popup-content {
+  background: #ffffff; /* 白背景 */
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  height: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.popup-content .instruction {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px; /* 上部30px */
+  background-color: #f0f0f0; /* 薄い灰色 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 下270pxの文字領域 */
+.popup-content .message {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 30px; /* 上30px分は指示領域なので、その分だけ下げる */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto; /* 長いテキストがあればスクロール可能にする */
+  padding: 10px;
+  font-size: 100px;
+  color: #222;
+}
