@@ -14,6 +14,7 @@ class DataBase:
             CREATE TABLE IF NOT EXISTS reactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 reaction_speed REAL NOT NULL,
+                test_type TEXT NOT NULL,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
             """
@@ -22,11 +23,12 @@ class DataBase:
         cursor.close()
         conn.close()
 
-    def insert_output(self, reaction_speed):
+    def insert_output(self, reaction_speed, test_type):
         """
         Save output to database
 
         reaction_speed: float (ms)
+        test_type: str
         return: None
         """
         # データベースに接続（存在しない場合は自動的に作成されます）
@@ -39,7 +41,10 @@ class DataBase:
         timestamp = datetime.datetime.now()
 
         # INSERTクエリ
-        cursor.execute("INSERT INTO reactions (reaction_speed, timestamp) VALUES (?, ?)", (reaction_speed, timestamp))
+        cursor.execute(
+            "INSERT INTO reactions (reaction_speed, test_type, timestamp) VALUES (?, ?, ?)",
+            (reaction_speed, test_type, timestamp),
+        )
         conn.commit()
 
         # コミットとクローズ
@@ -47,41 +52,43 @@ class DataBase:
         conn.close()
 
     def get_all_data(self):
+        total_data = {}
         # データベースに接続（存在しない場合は自動的に作成されます）
         conn = sqlite3.connect(self.db_path)
         # カーソルオブジェクトを取得
         cursor = conn.cursor()
-        # 直近 1 時間のデータを取得
-        cursor.execute("""SELECT * FROM reactions""")
-        rows = cursor.fetchall()
-
+        for test_type in ["test1", "test2", "test3"]:
+            cursor.execute(f"""SELECT * FROM reactions WHERE test_type = '{test_type}'""")
+            rows = cursor.fetchall()
+            total_data[test_type] = [row[1] for row in rows]
         # コミットとクローズ
         cursor.close()
         conn.close()
 
-        print([row[1] for row in rows])
-
-        return [row[1] for row in rows]
+        return total_data
 
     def get_recent_data(self, hours=1):
+        recent_data = {}
         # データベースに接続（存在しない場合は自動的に作成されます）
         conn = sqlite3.connect(self.db_path)
         # カーソルオブジェクトを取得
         cursor = conn.cursor()
         # 直近 1 時間のデータを取得
-        cursor.execute(
-            f"""
-            SELECT * FROM reactions
-            WHERE timestamp >= DATETIME('now', '-{hours} hour')
-        """
-        )
-        rows = cursor.fetchall()
+        for test_type in ["test1", "test2", "test3"]:
+            cursor.execute(
+                f"""
+                SELECT * FROM reactions
+                WHERE test_type = '{test_type}' AND timestamp >= DATETIME('now', '-{hours} hour')
+                """
+            )
+            rows = cursor.fetchall()
+            recent_data[test_type] = [row[1] for row in rows]
 
         # コミットとクローズ
         cursor.close()
         conn.close()
 
-        return [row[1] for row in rows]
+        return recent_data
 
 
 if __name__ == "__main__":
