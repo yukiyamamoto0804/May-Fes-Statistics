@@ -54,7 +54,7 @@
 /* ポップアップのコンテンツ */
 .popup-content {
   background: #ffffff; /* 白背景 */
-  padding: 20px;
+  padding: 0px;
   border-radius: 8px;
   width: 400px;
   height: 300px;
@@ -67,7 +67,11 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 30px; /* 上部30px */
+  height: 60px; /* 上部60px */
+  padding: 0px;
+  margin: 0px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
   background-color: #f0f0f0; /* 薄い灰色 */
   display: flex;
   justify-content: center;
@@ -75,6 +79,15 @@
   font-size: 16px;
   font-weight: bold;
   color: #333;
+}
+
+.popup-content .center {
+  padding: 20px;
+  height: calc(100% - 40px);
+  display: flex;
+  flex-direction: column; /* 縦に並べる */
+  justify-content: center; /* 縦方向の中央揃え */
+  align-items: center; /* 横方向の中央揃え */
 }
 
 /* 下270pxの文字領域 */
@@ -88,7 +101,55 @@
   justify-content: center;
   align-items: center;
   overflow-y: auto; /* 長いテキストがあればスクロール可能にする */
-  padding: 10px;
+  padding: 0px;
   font-size: 100px;
   color: #222;
+}
+
+/* ラジオボタンのコンテナ */
+.radio-group {
+  display: flex;
+  justify-content: center; /* 横中央揃え */
+  gap: 20px; /* ボタン間の余白 */
+  margin: 20px 0;
+}
+
+/* ラベルをクリックしやすくする */
+.radio-group label {
+  display: flex;
+  align-items: center; /* 縦方向中央 */
+  gap: 8px; /* ラジオボタンとテキストの間隔 */
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* デフォルトのラジオボタンを非表示にする */
+.radio-group input[type="radio"] {
+  display: none;
+}
+
+/* カスタムラジオボタンのスタイル */
+.radio-group label::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  display: inline-block;
+  position: relative;
+}
+
+/* 選択された場合のスタイル */
+.radio-group input[type="radio"]:checked + label::before {
+  background-color: #007bff;
+  border-color: #007bff;
+  box-shadow: inset 0 0 0 4px white;
+}
+
+.hist {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column; /* 縦に並べる */
+  justify-content: center; /* 縦方向の中央揃え */
+  align-items: center; /* 横方向の中央揃え */
 }
