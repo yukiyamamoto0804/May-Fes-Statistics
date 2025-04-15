@@ -28,7 +28,6 @@ function App() {
     }
     if (reactionTime.length === gameEpochSize) {
       setReactionTime([]);
-      setAdditionalInfo([]);
     }
 
     setPlayState(newPlayState)
@@ -118,6 +117,7 @@ function App() {
         setGameState("init");
       }
       setPlayState("init");
+      setAdditionalInfo([]);
     }
   }, [reactionTime])
 
