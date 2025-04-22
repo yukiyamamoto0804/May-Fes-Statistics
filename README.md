@@ -1,15 +1,26 @@
-cd frontend
+# 初期設定
 
-npm install
+## npmのinstall
+1.  ```cd frontend```
 
-cd ../backend
+2.  ```npm install```
 
-python3.13 -m venv .venv
+## python仮想環境の構築
 
-source .venv/bin/activate
+3. ```cd ../backend```
 
-pip install -r requirements.txt 
+4. ```python3.13 -m venv .venv```
 
-cd ../frontend
+5. ```source .venv/bin/activate```
 
-npm run start
+6. ```pip install -r requirements.txt```
+
+# 実行方法
+
+1. ```cd ../frontend```
+
+2. ```npm run start```
+
+# 結果の保存先
+
+- ```backend/output```フォルダに```test1.csv```, ```test2.csv```, ```test3.csv```が保存されます
