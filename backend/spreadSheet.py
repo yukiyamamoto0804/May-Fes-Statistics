@@ -29,12 +29,22 @@ class SpreadSheet:
         next_row = len(worksheet.col_values(1)) + 1
         # timestampの取得
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if len(worksheet.col_values(1)) > 1 and isint(worksheet.col_values(1)[-1]):
+            group_id = int(worksheet.col_values(1)[-1]) + 1
+        else:
+            group_id = 1
+        print(reaction_speed)
+        print(additional_info)
         for i in range(len(reaction_speed)):
             # セルにデータを保存(全テスト共通)
             worksheet.update_cell(next_row + i, 1, reaction_speed[i])  # A列に反応速度を挿入
             worksheet.update_cell(next_row + i, 2, timestamp)  # B列にtimestampを挿入
             column_index = 3
             print(additional_info)
+            worksheet.update_cell(next_row + i, 1, group_id)  # A列にgroupIdを挿入
+            worksheet.update_cell(next_row + i, 2, reaction_speed[i])  # B列に反応速度を挿入
+            worksheet.update_cell(next_row + i, 3, timestamp)  # C列にtimestampを挿入
+            column_index = 4
             for v in additional_info[i].values():
                 worksheet.update_cell(next_row + i, column_index, v)
                 column_index += 1
@@ -47,6 +57,13 @@ class SpreadSheet:
             df = df.dropna(how="all")  # 空行削除
             total_data[sheet_name] = df
         return total_data
+
+def isint(x):
+    try:
+        int(x)
+        return True
+    except:
+        return False
 
 
 if __name__ == "__main__":

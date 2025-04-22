@@ -37,6 +37,21 @@
   }
 }
 
+/* テストの内容説明 */
+.test-description {
+  width: 800px;
+  padding: 0.6px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin: 0.6px auto;
+}
+
+.test-instruction p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
 /* 背景のオーバーレイ */
 .popup-overlay {
   position: fixed;

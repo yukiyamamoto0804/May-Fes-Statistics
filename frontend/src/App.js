@@ -28,7 +28,6 @@ function App() {
     }
     if (reactionTime.length === gameEpochSize) {
       setReactionTime([]);
-      setAdditionalInfo([]);
     }
 
     setPlayState(newPlayState)
@@ -56,6 +55,7 @@ function App() {
   };
 
   const sendData = () => {
+    console.log({ start_time: startTime, reaction_speed: reactionTime, test_type : selected, additional_info : additionalInfo });
     fetch(`${HOST_URL}/api/set-data`, {
       method: "POST",
       headers: {
@@ -106,6 +106,8 @@ function App() {
       timeoutId.current = null; // timeoutIdをnullに設定
       // setShowPopup(false); // ポップアップを非表示
     }
+    setReactionTime([]);
+    setAdditionalInfo([]);
   }
 
   useEffect(() => {
@@ -118,6 +120,7 @@ function App() {
         setGameState("init");
       }
       setPlayState("init");
+      setAdditionalInfo([]);
     }
   }, [reactionTime])
 
@@ -163,6 +166,9 @@ function App() {
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>反応速度統計</h1>
+      <p>統計分析手法の基礎的なものに「推定」と「検定」があります。ここでは、来場者の皆様から集めたデータを用いて、実際に「推定」と「検定」を行い、その背景に基づく理論を解説します。</p>
+      <p>それぞれのテストは5回連続で正解したら結果が送信されます</p>
+      <h2>テストの選択</h2>
       <div className="radio-group">
         <input
           type="radio"
@@ -194,6 +200,18 @@ function App() {
         />
         <label htmlFor="test3">テスト3</label>
       </div>
+      <div className="test-description">
+        <h3>テスト内容</h3>
+        <div className="test-instruction">
+          <p>
+            {selected === "test1" ? "文字が出たらEnterキーを押してください" : (
+              selected === "test2" ? "青色の文字が出たら「F」を、赤色の文字が出たら「J」を押してください" :
+              "「あお」と書かれた文字が出たら「F」を、「あか」と書かれた文字が出たら「J」を押してください"
+            )}
+          </p>
+        </div>
+      </div>
+      <h2>テスト開始</h2>
       <p>「スタート」または「練習」を押して下さい</p>
       <button onClick={() => startGame("test")} disabled={gameState === "ready"}>
         スタート

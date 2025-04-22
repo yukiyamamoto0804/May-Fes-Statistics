@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from csv_data_saver import CsvDataSaver
 from spreadSheet import SpreadSheet
 
 app = Flask(__name__)
@@ -40,5 +41,6 @@ def get_react_speed():
 
 
 if __name__ == "__main__":
-    spreadSheet = SpreadSheet()
+    # spreadSheet = SpreadSheet()
+    spreadSheet = CsvDataSaver()
     app.run(host="0.0.0.0", port=8888, debug=True)
