@@ -37,10 +37,24 @@
   }
 }
 
+.project-description {
+  width: 800px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin: 0.6px auto;
+}
+
+.test-instruction p {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 /* テストの内容説明 */
 .test-description {
   width: 800px;
-  padding: 0.6px;
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;
@@ -50,6 +64,10 @@
 .test-instruction p {
   font-size: 1.1rem;
   line-height: 1.6;
+}
+
+.game-button {
+  margin: 0.6px 10px;
 }
 
 /* 背景のオーバーレイ */

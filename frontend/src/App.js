@@ -166,8 +166,14 @@ function App() {
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>反応速度統計</h1>
-      <p>統計分析手法の基礎的なものに「推定」と「検定」があります。ここでは、来場者の皆様から集めたデータを用いて、実際に「推定」と「検定」を行い、その背景に基づく理論を解説します。</p>
-      <p>それぞれのテストは5回連続で正解したら結果が送信されます</p>
+      <div className="project-description">
+        <h3>企画説明</h3>
+        <p>統計分析手法の基礎的なものに「推定」と「検定」があります。<br></br>
+          ここでは、来場者の皆様から集めたデータを用いて、実際に「推定」と「検定」を行います。<br></br>
+          「応物の散歩道」にて、その背景に基づく理論を解説しております。</p>
+        <p>分析データとして、反射神経のデータを収集します。<br></br>ここでは3種類のテストを行い、適切なキーが押されるまでの時間（反応速度）を収集します。</p>
+        <p>それぞれのテストは5回連続で正解したら結果が記録されます。</p>
+      </div>
       <h2>テストの選択</h2>
       <div className="radio-group">
         <input
@@ -213,13 +219,13 @@ function App() {
       </div>
       <h2>テスト開始</h2>
       <p>「スタート」または「練習」を押して下さい</p>
-      <button onClick={() => startGame("test")} disabled={gameState === "ready"}>
+      <button className="game-button" onClick={() => startGame("test")} disabled={gameState === "ready"}>
         スタート
       </button>
-      <button onClick={() => startGame("practice")} disabled={gameState === "ready"}>
+      <button className="game-button" onClick={() => startGame("practice")} disabled={gameState === "ready"}>
         練習
       </button>
-      <button onClick={getData} disabled={gameState === "ready" || gameState === "waiting"}>
+      <button className="game-button" onClick={getData} disabled={gameState === "ready" || gameState === "waiting"}>
         データを見る
       </button>
       {reactionTime !== null && <p>あなたの反応時間: {reactionTime.join(', ')} ms</p>}
