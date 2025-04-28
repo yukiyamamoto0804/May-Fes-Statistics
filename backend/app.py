@@ -35,7 +35,7 @@ def get_react_speed():
         data = {}
         for key, df in df_data.items():
             data[key] = df["反応速度"].to_list()
-        return jsonify({"message": "Data saved successfully", "data": data}), 201
+        return jsonify({"message": "Data extracted successfully", "data": data}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

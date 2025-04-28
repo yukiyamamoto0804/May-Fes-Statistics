@@ -14,6 +14,7 @@ function App() {
   const timeoutId = useRef(null);
   const [showPopup1, setShowPopup1] = useState(false); // ポップアップの表示状態
   const [showPopup2, setShowPopup2] = useState(false); // ポップアップの表示状態
+  const [showPopup3, setShowPopup3] = useState(false);
   const [storeData, setStoreData] = useState([]);
   const [histData, setHistData] = useState(null);
   const [selected, setSelected] = useState("test1");
@@ -23,13 +24,14 @@ function App() {
 
   // スタートボタンの処理
   const startGame = (newPlayState) => {
+    console.log("b")
     if (gameState === "interrupt") {
+      console.log("a");
       return; // すでにタイマーが設定されている場合、処理を中断
     }
     if (reactionTime.length === gameEpochSize) {
       setReactionTime([]);
     }
-
     setPlayState(newPlayState)
     setGameState("waiting");
     setMessage("");
@@ -65,7 +67,7 @@ function App() {
     })
     .then(response => response.json())
     .then(data => console.log(data))
-    .catch(error => console.error("Error:", error));
+    .catch(error => {console.error("Error:", error);alert("データ送信に失敗しました");});
   }
 
   const getData = () => {
@@ -113,6 +115,7 @@ function App() {
   useEffect(() => {
     if (reactionTime.length === gameEpochSize) {
       setShowPopup1(false); // ポップアップを非表示
+      setShowPopup3(true);
       if (playState === "test") {
         sendData();
         setGameState("result");
@@ -128,7 +131,14 @@ function App() {
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (gameState === "next") {
+        console.log("Game Start");
         startGame(playState);
+      } else if (showPopup2) {
+        console.log(gameState);
+        setShowPopup2(false);
+        setGameState("init");
+      } else if (showPopup3) {
+        setShowPopup3(false);
       } else if (selected === "test1") {
         if (event.key === "Enter" && gameState === "ready") {
           finishGame();
@@ -219,13 +229,13 @@ function App() {
       </div>
       <h2>テスト開始</h2>
       <p>「スタート」または「練習」を押して下さい</p>
-      <button className="game-button" onClick={() => startGame("test")} disabled={gameState === "ready"}>
+      <button className="game-button" onClick={() => startGame("test")} disabled={gameState !== "init" && gameState !== "result"}>
         スタート
       </button>
-      <button className="game-button" onClick={() => startGame("practice")} disabled={gameState === "ready"}>
+      <button className="game-button" onClick={() => startGame("practice")} disabled={gameState !== "init" && gameState !== "result"}>
         練習
       </button>
-      <button className="game-button" onClick={getData} disabled={gameState === "ready" || gameState === "waiting"}>
+      <button className="game-button" onClick={getData} disabled={gameState !== "result"}>
         データを見る
       </button>
       {reactionTime !== null && <p>あなたの反応時間: {reactionTime.join(', ')} ms</p>}
@@ -248,7 +258,7 @@ function App() {
             {
               gameState === "next" ?
               <div>
-                <p className="instruction instruction1">「次へ」ボタンまたはEnterキーを押してください</p>
+                <p className="instruction instruction1">「次へ」ボタン、「Enter」、「F」、「J」の<br></br>いずれかを押してください</p>
                 <p className="message"><button onClick={() => startGame(playState)}>次へ</button></p>
               </div> :
               (selected === "test1" ? 
@@ -276,10 +286,21 @@ function App() {
             <div className="center">
               <p>間違えた入力により中断されました。</p>
               <p>もう一度試してください。</p>
-              <p><button onClick={() => {setShowPopup2(false);setGameState("init");}} disabled={gameState === "ready"}>OK</button></p>
+              <p><button onClick={() => {setShowPopup2(false);setGameState("init");}}>OK</button></p>
             </div>
           </div>
         </div>
+      )}
+      {showPopup3 && (
+        <div className="popup-overlay">
+        <div className="popup-content">
+          <div className="center">
+            <p>あなたの反応時間結果</p>
+            <p>{reactionTime.join(', ')} ms</p>
+            <p><button onClick={() => {setShowPopup3(false);}}>OK</button></p>
+          </div>
+        </div>
+      </div>
       )}
     </div>
   );
