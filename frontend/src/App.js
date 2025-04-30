@@ -417,7 +417,7 @@ function App() {
             "rgba(0,128,0,1)",
           )}
         </div>
-        <h2>色や文字の違いによって平均が異なるか</h2>
+        <h2>色や文字の違いによって平均が異なるかの検定</h2>
         <table className="styled-table">
           <thead>
             <tr>
