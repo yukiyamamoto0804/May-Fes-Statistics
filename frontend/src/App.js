@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, } from "recharts";
 import "./App.css";
+import CheckboxGroup from "./components/checkboxGroup";
+import FunctionChartNormal from "./components/functionChartNormal";
 
 const HOST_URL = "http://localhost:8888";
 
@@ -15,12 +17,43 @@ function App() {
   const [showPopup1, setShowPopup1] = useState(false); // ポップアップの表示状態
   const [showPopup2, setShowPopup2] = useState(false); // ポップアップの表示状態
   const [showPopup3, setShowPopup3] = useState(false);
-  const [storeData, setStoreData] = useState([]);
-  const [histData, setHistData] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [storeData, setStoreData] = useState({});
+  const [histData, setHistData] = useState({});
+  const [analysisResults, setAnalysisResults] = useState({});
   const [selected, setSelected] = useState("test1");
   const [additionalInfo, setAdditionalInfo] = useState([])
+  const [checkboxState, setCheckboxStateState] = useState({
+    test1: true,
+    test2: true,
+    test3: true,
+  });
+
+  const handleChange = (key) => {
+    const currentValue = checkboxState[key];
+    const newState = { ...checkboxState, [key]: !currentValue };
+
+    // チェックを外す場合、他に true が1つもなければブロック
+    const selectedCount = Object.values(checkboxState).filter(Boolean).length;
+    if (currentValue === true && selectedCount === 1) {
+      // 最後の true を外そうとしている → 無視
+      return;
+    }
+
+    setCheckboxStateState(newState);
+  };
 
   const gameEpochSize = 5;
+
+  const testNameMap = {
+    "test1": "テスト１",
+    "test2": "テスト２",
+    "test3": "テスト３"
+  }
+  const formatter = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
 
   // スタートボタンの処理
   const startGame = (newPlayState) => {
@@ -66,7 +99,7 @@ function App() {
       body: JSON.stringify({ start_time: startTime, reaction_speed: reactionTime, test_type : selected, additional_info : additionalInfo })
     })
     .then(response => response.json())
-    .then(data => console.log(data))
+    .then(data => {console.log(data);getData();})
     .catch(error => {console.error("Error:", error);alert("データ送信に失敗しました");});
   }
 
@@ -81,8 +114,9 @@ function App() {
     .then(response => response.json())
     .then(data => {
       console.log(data);
-      setStoreData(data.data[selected]);
-      setHistData(generateHistogramData(data.data[selected]));
+      setStoreData(data.data);
+      setHistData(generateHistogramData(data.data));
+      setAnalysisResults(data.analysis_results);
     })
     .catch(error => console.error("Error:", error));
   }
@@ -120,7 +154,8 @@ function App() {
         sendData();
         setGameState("result");
       } else {
-        setGameState("init");
+        getData();
+        setGameState("result");
       }
       setPlayState("init");
       setAdditionalInfo([]);
@@ -235,21 +270,178 @@ function App() {
       <button className="game-button" onClick={() => startGame("practice")} disabled={gameState !== "init" && gameState !== "result"}>
         練習
       </button>
-      <button className="game-button" onClick={getData} disabled={gameState !== "result"}>
+      <button className="game-button" onClick={() => {setShowResult(true);getData();}} disabled={gameState !== "init" && gameState !== "result"}>
         データを見る
       </button>
-      {reactionTime !== null && <p>あなたの反応時間: {reactionTime.join(', ')} ms</p>}
-      {storeData.length > 0 && (
-        <div className="hist">
-          <h2>過去の反応時間ヒストグラム</h2>
-          <ResponsiveContainer width="80%" height={300}>
-            <BarChart data={histData}>
-              <XAxis dataKey="range" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+      {reactionTime.length !== 0 && <h3>あなたの反応時間: {reactionTime.join(', ')} ms</h3>}
+      {showResult && Object.keys(storeData).length > 0 && Object.keys(histData).length > 0 && (
+        <div>
+          <h1>データ分析結果</h1>
+        {storeData[selected].length > 0 && (histData.length > 0 && (
+          <div className="hist">
+            <h2>過去の反応時間ヒストグラム</h2>
+            <CheckboxGroup state={checkboxState} handleChange={handleChange}></CheckboxGroup>
+            <ResponsiveContainer width="80%" height={300}>
+              <BarChart data={histData}>
+                <XAxis dataKey="range" />
+                <YAxis />
+                <Tooltip />
+                {checkboxState.test1 && <Bar dataKey={"test1"} fill="#ff0000" />}
+                {checkboxState.test2 && <Bar dataKey={"test2"} fill="#0000ff" />}
+                {checkboxState.test3 && <Bar dataKey={"test3"} fill="#009879" />}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ))}
+        <h2>反応速度の平均値</h2>
+        <table className="styled-table">
+          <thead>
+            <tr>
+              <th>テストの種類</th>
+              <th>テスト１</th>
+              <th>テスト２</th>
+              <th>テスト３</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>反応速度の平均値(ms)</td>
+              <td>{analysisResults.mean_reaction_speed.test1}</td>
+              <td>{analysisResults.mean_reaction_speed.test2}</td>
+              <td>{analysisResults.mean_reaction_speed.test3}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ width: "70%", margin: "0 auto", paddingTop: "30px" }}>
+          <h2>反応速度の個人差の分布</h2>
+          <FunctionChartNormal 
+            mu1={analysisResults.distribution.test1.mu}
+            sigma1={analysisResults.distribution.test1.sigma}
+            mu2={analysisResults.distribution.test2.mu}
+            sigma2={analysisResults.distribution.test2.sigma}
+            mu3={analysisResults.distribution.test3.mu}
+            sigma3={analysisResults.distribution.test3.sigma}
+          />
+        </div>
+        <h2>分布の最尤推定量</h2>
+        <table className="styled-table">
+          <thead>
+            <tr>
+              <th>テストの種類</th>
+              <th>テスト１</th>
+              <th>テスト２</th>
+              <th>テスト３</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>平均値（μ）</td>
+              <td>{analysisResults.distribution.test1.mu}</td>
+              <td>{analysisResults.distribution.test2.mu}</td>
+              <td>{analysisResults.distribution.test3.mu}</td>
+            </tr>
+            <tr>
+              <td>分散（σ²）</td>
+              <td>{analysisResults.distribution.test1.sigma}</td>
+              <td>{analysisResults.distribution.test2.sigma}</td>
+              <td>{analysisResults.distribution.test3.sigma}</td>
+            </tr>
+          </tbody>
+        </table>
+        {/* <div style={{ width: "80%", margin: "0 auto", paddingTop: "30px" }}>
+          <h2>反応速度の個人内のばらつき</h2>
+          <FunctionChartLinear 
+            coef1={analysisResults.distribution.test1.coef}
+            intercept1={analysisResults.distribution.test1.intercept}
+            coef2={analysisResults.distribution.test2.coef}
+            intercept2={analysisResults.distribution.test2.intercept}
+            coef3={analysisResults.distribution.test3.coef}
+            intercept3={analysisResults.distribution.test3.intercept}
+          />
+        </div> */}
+        <h2>分布が等しいかどうかの検定</h2>
+        <table className="styled-table">
+          <thead>
+            <tr>
+              <th>テストの種類</th>
+              <th>テスト１,テスト２</th>
+              <th>テスト２,テスト３</th>
+              <th>テスト３,テスト１</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>p値</td>
+              <td>{formatter.format(analysisResults.likelihood_ratio_test[0].p_value)}</td>
+              <td>{formatter.format(analysisResults.likelihood_ratio_test[1].p_value)}</td>
+              <td>{formatter.format(analysisResults.likelihood_ratio_test[2].p_value)}</td>
+            </tr>
+            <tr>
+              <td>有意水準0.05の検定結果</td>
+              <td>{analysisResults.likelihood_ratio_test[0].p_value > 0.05 ? "分布は異なるとはいえない" : "分布は異なる"}</td>
+              <td>{analysisResults.likelihood_ratio_test[1].p_value > 0.05 ? "分布は異なるとはいえない" : "分布は異なる"}</td>
+              <td>{analysisResults.likelihood_ratio_test[2].p_value > 0.05 ? "分布は異なるとはいえない" : "分布は異なる"}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ width: "80%", margin: "0 auto", paddingTop: "30px" }}>
+          <h2>テスト２の色による違い</h2>
+          {generateHistogramDataColor(
+            analysisResults.stroop_test.test2_color.red_values,
+            analysisResults.stroop_test.test2_color.blue_values,
+            "赤色",
+            "青色",
+            "rgba(255,0,0,1)",
+            "rgba(0,0,255,1)",
+          )}
+        </div>
+        <div style={{ width: "80%", margin: "0 auto", paddingTop: "30px" }}>
+          <h2>テスト３の文字による違い</h2>
+          {generateHistogramDataColor(
+            analysisResults.stroop_test.test3_text.red_values,
+            analysisResults.stroop_test.test3_text.blue_values,
+            "あか",
+            "あお",
+            "rgba(255,0,0,1)",
+            "rgba(0,0,255,1)",
+          )}
+        </div>
+        <div style={{ width: "80%", margin: "0 auto", paddingTop: "30px" }}>
+          <h2>テスト３の文字と色の一致・不一致の違い</h2>
+          {generateHistogramDataColor(
+            analysisResults.stroop_test.test3_stroop.equal_group_values,
+            analysisResults.stroop_test.test3_stroop.different_group_values,
+            "一致",
+            "不一致",
+            "rgba(255,125,0,1)",
+            "rgba(0,128,0,1)",
+          )}
+        </div>
+        <h2>色や文字の違いによって平均が異なるか</h2>
+        <table className="styled-table">
+          <thead>
+            <tr>
+              <th>分析対象</th>
+              <th>テスト２の色の違い</th>
+              <th>テスト３の文字の違い</th>
+              <th>テスト３の文字と色の一致・不一致</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>p値</td>
+              <td>{formatter.format(analysisResults.stroop_test.test2_color.p_value)}</td>
+              <td>{formatter.format(analysisResults.stroop_test.test3_text.p_value)}</td>
+              <td>{formatter.format(analysisResults.stroop_test.test3_stroop.p_value)}</td>
+            </tr>
+            <tr>
+              <td>有意水準0.05の検定結果</td>
+              <td>{analysisResults.stroop_test.test2_color.p_value > 0.05 ? "平均が異なるとはいえない" : "平均が異なる"}</td>
+              <td>{analysisResults.stroop_test.test3_text.p_value > 0.05 ? "平均が異なるとはいえない" : "平均が異なる"}</td>
+              <td>{analysisResults.stroop_test.test3_stroop.p_value > 0.05 ? "平均が異なるとはいえない" : "平均が異なる"}</td>
+            </tr>
+          </tbody>
+        </table>
         </div>
       )}
       {showPopup1 && (
@@ -309,23 +501,78 @@ function App() {
 export default App;
 
 // ヒストグラムデータを作成する関数
-function generateHistogramData(data) {
-  if (data.length === 0) return [];
-
+function generateHistogramData(datas) {
   const minTime = 0;
   const maxTime = 1500;
-  const binSize = 20; // 50msごとの範囲
+  const binSize = 30; // 50msごとの範囲
   const bins = Math.ceil((maxTime - minTime) / binSize) + 1;
 
   const histogram = Array.from({ length: bins }, (_, i) => ({
     range: `${minTime + i * binSize}-${minTime + (i + 1) * binSize}ms`,
-    count: 0,
+    test1: 0,
+    test2: 0,
+    test3: 0
   }));
 
-  data.forEach((value) => {
-    const index = Math.floor((value - minTime) / binSize);
-    if (histogram[index]) histogram[index].count += 1;
+  for (const key of Object.keys(datas)) {
+    const data = datas[key];
+    if (!Array.isArray(data) || data.length === 0) {
+      continue; // 空配列として返す
+    }
+    data.forEach((value) => {
+      const index = Math.floor((value - minTime) / binSize);
+      if (histogram[index]) histogram[index][key] += 1;
+    });
+  }
+  return histogram;
+}
+
+function generateHistogramDataColor(red_values, blue_values, red_name, blue_name, color1, color2, binSize = 0.05, minTime = -0.6, maxTime = 0.6) {
+  const numBins = Math.ceil((maxTime - minTime) / binSize);
+
+  if (!Array.isArray(red_values) || red_values.length === 0) {
+    return []; // 空配列として返す
+  }
+  if (!Array.isArray(blue_values) || blue_values.length === 0) {
+    return []; // 空配列として返す
+  }
+
+  // ヒストグラムの初期化
+  const histogram = Array.from({ length: numBins }, (_, i) => {
+    const start = Math.round((minTime + i * binSize) * 100) / 100;
+    const end = Math.round((start + binSize) * 100) / 100;
+    return {
+      range: `${start} ~ ${end}ms`,
+      count1: 0,
+      count2: 0, 
+    };
   });
 
-  return histogram;
+  // 各値を対応するビンにカウント
+  red_values.forEach((value) => {
+    if (value < minTime || value > maxTime) return; // 範囲外はスキップ
+    const index = Math.min(Math.floor((value - minTime) / binSize), numBins - 1);
+    histogram[index].count1 += 1;
+  });
+  // 各値を対応するビンにカウント
+  blue_values.forEach((value) => {
+    if (value < minTime || value > maxTime) return; // 範囲外はスキップ
+    const index = Math.min(Math.floor((value - minTime) / binSize), numBins - 1);
+    histogram[index].count2 += 1;
+  });
+
+  return (
+    <div className="hist">
+    <ResponsiveContainer width="80%" height={300}>
+      <BarChart data={histogram}>
+        <XAxis dataKey="range" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="count1" fill={color1} name={red_name} />
+        <Bar dataKey="count2" fill={color2} name={blue_name} />
+      </BarChart>
+    </ResponsiveContainer>
+    </div>
+  );
 }

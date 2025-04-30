@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from csv_data_saver import CsvDataSaver
 from spreadSheet import SpreadSheet
+from analyze import Analyze
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
@@ -35,7 +36,13 @@ def get_react_speed():
         data = {}
         for key, df in df_data.items():
             data[key] = df["反応速度"].to_list()
-        return jsonify({"message": "Data extracted successfully", "data": data}), 201
+        analysis_results = {}
+        analyze = Analyze(df_data)
+        analysis_results["mean_reaction_speed"] = analyze.get_mean_reaction_speed()
+        analysis_results["distribution"] = analyze.get_distribution()
+        analysis_results["likelihood_ratio_test"] = analyze.likelihood_ratio_test()
+        analysis_results["stroop_test"] = analyze.stroop_test()
+        return jsonify({"message": "Data extracted successfully", "data": data, "analysis_results": analysis_results}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

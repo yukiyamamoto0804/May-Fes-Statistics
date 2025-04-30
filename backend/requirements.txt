@@ -3,3 +3,5 @@ flask-cors
 gspread
 oauth2client
 gspread-dataframe
+scikit-learn
+scipy
