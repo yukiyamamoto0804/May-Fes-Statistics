@@ -118,8 +118,8 @@ function App() {
       setHistData(generateHistogramData(data.data));
       setAnalysisResults(data.analysis_results);
       if (finish) {
-        setScoreRank(yourRank(data.data[selected], median(reactionTime)));
-        console.log(yourRank(data.data[selected], median(reactionTime)));
+        setScoreRank(yourRank(data.median[selected], median(reactionTime)));
+        console.log(yourRank(data.median[selected], median(reactionTime)));
       }
     })
     .catch(error => console.error("Error:", error));
@@ -186,31 +186,33 @@ function App() {
       } else if (showPopup4) {
         setShowPopup4(false);
         setGameState("init");
-      } else if (selected === "test1") {
-        if (event.key === "Enter" && gameState === "ready") {
-          finishGame();
-        }
-        if (event.key === "Enter" && gameState === "waiting") {
-          interruptGame("error");
-        }
-      } else if (selected === "test2") {
-        if (event.key === "f" || event.key === "j") {
-          if (color === "blue" && event.key === "f" && gameState === "ready") {
+      } else if (["waiting", "ready"].includes(gameState)) {
+        if (selected === "test1") {
+          if (event.key === "Enter" && gameState === "ready") {
             finishGame();
-          } else if (color === "red" && event.key === "j" && gameState === "ready") {
-            finishGame();
-          }else {
+          }
+          if (event.key === "Enter" && gameState === "waiting") {
             interruptGame("error");
           }
-        }
-      } else if (selected === "test3") {
-        if (event.key === "f" || event.key === "j") {
-          if (message === "あお" && event.key === "f" && gameState === "ready") {
-            finishGame();
-          } else if (message === "あか" && event.key === "j" && gameState === "ready") {
-            finishGame();
-          }else {
-            interruptGame("error");
+        } else if (selected === "test2") {
+          if (event.key === "f" || event.key === "j") {
+            if (color === "blue" && event.key === "f" && gameState === "ready") {
+              finishGame();
+            } else if (color === "red" && event.key === "j" && gameState === "ready") {
+              finishGame();
+            } else {
+              interruptGame("error");
+            }
+          }
+        } else if (selected === "test3") {
+          if (event.key === "f" || event.key === "j") {
+            if (message === "あお" && event.key === "f" && gameState === "ready") {
+              finishGame();
+            } else if (message === "あか" && event.key === "j" && gameState === "ready") {
+              finishGame();
+            } else {
+              interruptGame("error");
+            }
           }
         }
       }
@@ -660,5 +662,5 @@ function yourRank(all_data, your_data) {
       cnt += 1;
     }
   }
-  return Math.ceil(cnt / all_data.length * 100)
+  return Math.min(Math.ceil(cnt / all_data.length * 100 - 0.005), 100)
 }

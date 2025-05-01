@@ -42,7 +42,7 @@ def get_react_speed():
         analysis_results["distribution"] = analyze.get_distribution()
         analysis_results["likelihood_ratio_test"] = analyze.likelihood_ratio_test()
         analysis_results["stroop_test"] = analyze.stroop_test()
-        return jsonify({"message": "Data extracted successfully", "data": data, "analysis_results": analysis_results}), 201
+        return jsonify({"message": "Data extracted successfully", "data": data, "analysis_results": analysis_results, "median": analyze.median_data}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
