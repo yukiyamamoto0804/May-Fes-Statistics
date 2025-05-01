@@ -24,11 +24,12 @@ class Analyze:
             self.mean_data[test] = self.df_data[test].groupby("GroupId")["反応速度"].mean().tolist()
             # 各 groupid ごとの 反応速度 の平均を計算
             self.df_data[test]["group_means"] = self.df_data[test].groupby("GroupId")["反応速度"].transform("mean")
+            self.df_data[test]["group_stds"] = self.df_data[test].groupby("GroupId")["反応速度"].transform("std")
             # 平均との差を計算し、新しい列に追加
             self.df_data[test]["speed_diff_from_group_mean"] = (
                 self.df_data[test]["反応速度"] - self.df_data[test]["group_means"]
             )
-            self.df_data[test]["speed_diff_relative"] = self.df_data[test]["speed_diff_from_group_mean"] / self.df_data[test]["group_means"]
+            self.df_data[test]["speed_diff_relative"] = self.df_data[test]["speed_diff_from_group_mean"] / self.df_data[test]["group_stds"]
 
     def get_mean_reaction_speed(self):
         mean_reaction_speed = {}
@@ -40,7 +41,7 @@ class Analyze:
         results = {}
         for test in self.tests:
             results[test] = {}
-            mu, sigma = self.normal_MLE(self.mean_data[test])
+            mu, sigma = self.normal_MLE(self.median_data[test])
             # 分散として使いたい：差の2乗
             self.df_data[test]["squared_diff"] = self.df_data[test]["speed_diff_from_group_mean"] ** 2
             # groupid ごとに平均を集計

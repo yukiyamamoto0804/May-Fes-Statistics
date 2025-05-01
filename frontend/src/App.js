@@ -24,9 +24,9 @@ function App() {
   const [selected, setSelected] = useState("test1");
   const [additionalInfo, setAdditionalInfo] = useState([])
   const [checkboxState, setCheckboxStateState] = useState({
-    test1: true,
-    test2: true,
-    test3: true,
+    テスト1: true,
+    テスト2: true,
+    テスト3: true,
   });
 
   const handleChange = (key) => {
@@ -280,20 +280,27 @@ function App() {
         {storeData[selected].length > 0 && (histData.length > 0 && (
           <div className="hist">
             <h2>過去の反応時間ヒストグラム</h2>
+            <div className="result-description">
+              <p>集めたデータをヒストグラムとして表しています。</p>
+              <p>チェックボックスの設定を変えることで特定のテスト結果のみを表示させられます。</p>
+            </div>
             <CheckboxGroup state={checkboxState} handleChange={handleChange}></CheckboxGroup>
             <ResponsiveContainer width="80%" height={300}>
               <BarChart data={histData}>
                 <XAxis dataKey="range" />
                 <YAxis />
                 <Tooltip />
-                {checkboxState.test1 && <Bar dataKey={"test1"} fill="#ff0000" />}
-                {checkboxState.test2 && <Bar dataKey={"test2"} fill="#0000ff" />}
-                {checkboxState.test3 && <Bar dataKey={"test3"} fill="#009879" />}
+                {checkboxState.テスト1 && <Bar dataKey={"test1"} fill="#ff0000" />}
+                {checkboxState.テスト2 && <Bar dataKey={"test2"} fill="#0000ff" />}
+                {checkboxState.テスト3 && <Bar dataKey={"test3"} fill="#009879" />}
               </BarChart>
             </ResponsiveContainer>
           </div>
         ))}
         <h2>反応速度の平均値</h2>
+        <div className="result-description">
+          <p>外れ値の影響を少なくするために、5回の中央値を個人の代表値として考え、その平均値を計算しています。</p>
+        </div>
         <table className="styled-table">
           <thead>
             <tr>
@@ -314,6 +321,9 @@ function App() {
         </table>
         <div style={{ width: "70%", margin: "0 auto", paddingTop: "30px" }}>
           <h2>反応速度の個人差の分布</h2>
+          <div className="result-description">
+            <p>個人の代表値(5回の中央値)は正規分布に従うと仮定して、その分布を最尤推定で計算しています。</p>
+          </div>
           <FunctionChartNormal 
             mu1={analysisResults.distribution.test1.mu}
             sigma1={analysisResults.distribution.test1.sigma}
@@ -323,7 +333,7 @@ function App() {
             sigma3={analysisResults.distribution.test3.sigma}
           />
         </div>
-        <h2>分布の最尤推定量</h2>
+        <h3>分布の最尤推定量</h3>
         <table className="styled-table">
           <thead>
             <tr>
@@ -360,6 +370,12 @@ function App() {
           />
         </div> */}
         <h2>分布が等しいかどうかの検定</h2>
+        <div className="result-description">
+          <p>異なる２つのテストのペアに対して、以下のように帰無仮説と対立仮説を定めます。</p>
+          <p>帰無仮説：平均(μ)と分散(σ²)が等しい</p>
+          <p>対立仮説：平均(μ)と分散(σ²)が異なる</p>
+          <p>尤度比検定を行い、平均(μ)と分散(σ²)が異なるかどうかを確認しています。</p>
+        </div>
         <table className="styled-table">
           <thead>
             <tr>
@@ -378,12 +394,21 @@ function App() {
             </tr>
             <tr>
               <td>有意水準0.05の検定結果</td>
-              <td>{analysisResults.likelihood_ratio_test[0].p_value > 0.05 ? "分布は異なるとはいえない" : "分布は異なる"}</td>
-              <td>{analysisResults.likelihood_ratio_test[1].p_value > 0.05 ? "分布は異なるとはいえない" : "分布は異なる"}</td>
-              <td>{analysisResults.likelihood_ratio_test[2].p_value > 0.05 ? "分布は異なるとはいえない" : "分布は異なる"}</td>
+              <td>{analysisResults.likelihood_ratio_test[0].p_value > 0.05 ? "分布が異なるとはいえない" : "分布が異なる"}</td>
+              <td>{analysisResults.likelihood_ratio_test[1].p_value > 0.05 ? "分布が異なるとはいえない" : "分布が異なる"}</td>
+              <td>{analysisResults.likelihood_ratio_test[2].p_value > 0.05 ? "分布が異なるとはいえない" : "分布が異なる"}</td>
             </tr>
           </tbody>
         </table>
+        <h2>文字の色・内容によって反応速度に違いが見られるかどうかを検定</h2>
+        <div className="result-description">
+          <p>テスト２・テスト３の結果から、色や内容が異なるときに反応速度の平均に有意差が見られるかどうかを検定しています。</p>
+          <p>個人差の影響を無視するために、それぞれのデータを標準化した<br></br>「（データ - 個人の平均）/ 個人の標準偏差」<br></br>の値を分析しています。</p>
+          <p>色や文字の条件でデータを２つのグループに分割し、それぞれは分散が等しい正規分布に従うと仮定します。<br></br>このとき、以下のように帰無仮説と対立仮説を定めます。</p>
+          <p>帰無仮説：平均(μ)が等しい</p>
+          <p>対立仮説：平均(μ)が異なる</p>
+          <p>尤度比検定を行い、平均(μ)が異なるかどうかを確認しています。</p>
+        </div>
         <div style={{ width: "80%", margin: "0 auto", paddingTop: "30px" }}>
           <h2>テスト２の色による違い</h2>
           {generateHistogramDataColor(
@@ -504,7 +529,7 @@ export default App;
 function generateHistogramData(datas) {
   const minTime = 0;
   const maxTime = 1500;
-  const binSize = 30; // 50msごとの範囲
+  const binSize = 25; // 50msごとの範囲
   const bins = Math.ceil((maxTime - minTime) / binSize) + 1;
 
   const histogram = Array.from({ length: bins }, (_, i) => ({
@@ -527,7 +552,7 @@ function generateHistogramData(datas) {
   return histogram;
 }
 
-function generateHistogramDataColor(red_values, blue_values, red_name, blue_name, color1, color2, binSize = 0.05, minTime = -0.6, maxTime = 0.6) {
+function generateHistogramDataColor(red_values, blue_values, red_name, blue_name, color1, color2, binSize = 0.2, minTime = -2.5, maxTime = 2.5) {
   const numBins = Math.ceil((maxTime - minTime) / binSize);
 
   if (!Array.isArray(red_values) || red_values.length === 0) {
@@ -542,7 +567,7 @@ function generateHistogramDataColor(red_values, blue_values, red_name, blue_name
     const start = Math.round((minTime + i * binSize) * 100) / 100;
     const end = Math.round((start + binSize) * 100) / 100;
     return {
-      range: `${start} ~ ${end}ms`,
+      range: `${start} ~ ${end}`,
       count1: 0,
       count2: 0, 
     };
