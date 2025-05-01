@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, } from "recharts";
 import "./App.css";
 import CheckboxGroup from "./components/checkboxGroup";
-import FunctionChartNormal from "./components/functionChartNormal";
+import FunctionCharLog from "./components/functionChartLog";
 
 const HOST_URL = "http://localhost:8888";
 
@@ -13,10 +13,12 @@ function App() {
   const [color, setColor] = useState("red");
   const [startTime, setStartTime] = useState(null);
   const [reactionTime, setReactionTime] = useState([]);
+  const [scoreRank, setScoreRank] = useState(null);
   const timeoutId = useRef(null);
   const [showPopup1, setShowPopup1] = useState(false); // ポップアップの表示状態
   const [showPopup2, setShowPopup2] = useState(false); // ポップアップの表示状態
   const [showPopup3, setShowPopup3] = useState(false);
+  const [showPopup4, setShowPopup4] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [storeData, setStoreData] = useState({});
   const [histData, setHistData] = useState({});
@@ -57,9 +59,7 @@ function App() {
 
   // スタートボタンの処理
   const startGame = (newPlayState) => {
-    console.log("b")
     if (gameState === "interrupt") {
-      console.log("a");
       return; // すでにタイマーが設定されている場合、処理を中断
     }
     if (reactionTime.length === gameEpochSize) {
@@ -99,11 +99,11 @@ function App() {
       body: JSON.stringify({ start_time: startTime, reaction_speed: reactionTime, test_type : selected, additional_info : additionalInfo })
     })
     .then(response => response.json())
-    .then(data => {console.log(data);getData();})
+    .then(data => {getData(true);})
     .catch(error => {console.error("Error:", error);alert("データ送信に失敗しました");});
   }
 
-  const getData = () => {
+  const getData = (finish) => {
     fetch(`${HOST_URL}/api/get-data`, {
       method: "POST",
       headers: {
@@ -117,6 +117,10 @@ function App() {
       setStoreData(data.data);
       setHistData(generateHistogramData(data.data));
       setAnalysisResults(data.analysis_results);
+      if (finish) {
+        setScoreRank(yourRank(data.data[selected], median(reactionTime)));
+        console.log(yourRank(data.data[selected], median(reactionTime)));
+      }
     })
     .catch(error => console.error("Error:", error));
   }
@@ -131,10 +135,14 @@ function App() {
     }
   }
 
-  const interruptGame = () => {
+  const interruptGame = (state) => {
     console.log(timeoutId.current);
     setShowPopup1(false); // ポップアップを非表示
-    setShowPopup2(true); // ポップアップを非表示
+    if (state === "error") {
+      setShowPopup2(true); // ポップアップを非表示
+    } else {
+      setShowPopup4(true);
+    }
     setGameState("interrupt");
     setPlayState("init");
     if (timeoutId.current) {
@@ -152,11 +160,10 @@ function App() {
       setShowPopup3(true);
       if (playState === "test") {
         sendData();
-        setGameState("result");
       } else {
-        getData();
-        setGameState("result");
+        getData(true);
       }
+      setGameState("result");
       setPlayState("init");
       setAdditionalInfo([]);
     }
@@ -165,7 +172,9 @@ function App() {
   // Enterキーの処理
   useEffect(() => {
     const handleKeyPress = (event) => {
-      if (gameState === "next") {
+      if (event.key === "Escape" && (["waiting", "ready", "next"].includes(gameState))) {
+        interruptGame("escape");
+      } else if (gameState === "next") {
         console.log("Game Start");
         startGame(playState);
       } else if (showPopup2) {
@@ -174,12 +183,15 @@ function App() {
         setGameState("init");
       } else if (showPopup3) {
         setShowPopup3(false);
+      } else if (showPopup4) {
+        setShowPopup4(false);
+        setGameState("init");
       } else if (selected === "test1") {
         if (event.key === "Enter" && gameState === "ready") {
           finishGame();
         }
         if (event.key === "Enter" && gameState === "waiting") {
-          interruptGame();
+          interruptGame("error");
         }
       } else if (selected === "test2") {
         if (event.key === "f" || event.key === "j") {
@@ -188,7 +200,7 @@ function App() {
           } else if (color === "red" && event.key === "j" && gameState === "ready") {
             finishGame();
           }else {
-            interruptGame();
+            interruptGame("error");
           }
         }
       } else if (selected === "test3") {
@@ -198,7 +210,7 @@ function App() {
           } else if (message === "あか" && event.key === "j" && gameState === "ready") {
             finishGame();
           }else {
-            interruptGame();
+            interruptGame("error");
           }
         }
       }
@@ -270,10 +282,13 @@ function App() {
       <button className="game-button" onClick={() => startGame("practice")} disabled={gameState !== "init" && gameState !== "result"}>
         練習
       </button>
-      <button className="game-button" onClick={() => {setShowResult(true);getData();}} disabled={gameState !== "init" && gameState !== "result"}>
+      <button className="game-button" onClick={() => {setShowResult(true);getData(false);}} disabled={gameState !== "init" && gameState !== "result"}>
         データを見る
       </button>
-      {reactionTime.length !== 0 && <h3>あなたの反応時間: {reactionTime.join(', ')} ms</h3>}
+      {reactionTime.length !== 0 && <>
+        <h3>あなたの反応時間: {reactionTime.join(', ')} ms</h3>
+        <h3>あなたは全体の上位{scoreRank}%以内です。</h3>
+      </>}
       {showResult && Object.keys(storeData).length > 0 && Object.keys(histData).length > 0 && (
         <div>
           <h1>データ分析結果</h1>
@@ -322,18 +337,26 @@ function App() {
         <div style={{ width: "70%", margin: "0 auto", paddingTop: "30px" }}>
           <h2>反応速度の個人差の分布</h2>
           <div className="result-description">
-            <p>個人の代表値(5回の中央値)は正規分布に従うと仮定して、その分布を最尤推定で計算しています。</p>
+            <p>個人の代表値(5回の中央値)は対数正規分布に従うと仮定して、その分布を最尤推定で計算しています。</p>
           </div>
-          <FunctionChartNormal 
+          {/* <FunctionChartNormal 
             mu1={analysisResults.distribution.test1.mu}
             sigma1={analysisResults.distribution.test1.sigma}
             mu2={analysisResults.distribution.test2.mu}
             sigma2={analysisResults.distribution.test2.sigma}
             mu3={analysisResults.distribution.test3.mu}
             sigma3={analysisResults.distribution.test3.sigma}
+          /> */}
+          <FunctionCharLog
+            mu1={analysisResults.distribution.test1.logmu}
+            sigma1={analysisResults.distribution.test1.logsigma}
+            mu2={analysisResults.distribution.test2.logmu}
+            sigma2={analysisResults.distribution.test2.logsigma}
+            mu3={analysisResults.distribution.test3.logmu}
+            sigma3={analysisResults.distribution.test3.logsigma}
           />
         </div>
-        <h3>分布の最尤推定量</h3>
+        {/* <h3>分布の最尤推定量</h3>
         <table className="styled-table">
           <thead>
             <tr>
@@ -357,7 +380,7 @@ function App() {
               <td>{analysisResults.distribution.test3.sigma}</td>
             </tr>
           </tbody>
-        </table>
+        </table> */}
         {/* <div style={{ width: "80%", margin: "0 auto", paddingTop: "30px" }}>
           <h2>反応速度の個人内のばらつき</h2>
           <FunctionChartLinear 
@@ -381,8 +404,8 @@ function App() {
             <tr>
               <th>テストの種類</th>
               <th>テスト１,テスト２</th>
+              <th>テスト１,テスト３</th>
               <th>テスト２,テスト３</th>
-              <th>テスト３,テスト１</th>
             </tr>
           </thead>
           <tbody>
@@ -476,21 +499,25 @@ function App() {
               gameState === "next" ?
               <div>
                 <p className="instruction instruction1">「次へ」ボタン、「Enter」、「F」、「J」の<br></br>いずれかを押してください</p>
-                <p className="message"><button onClick={() => startGame(playState)}>次へ</button></p>
+                <p className="message"><button className="large-button" onClick={() => startGame(playState)}>次へ</button></p>
+                <p className="escape"><small>中断する場合はEscapeキーを押してください</small></p>
               </div> :
               (selected === "test1" ? 
               <div>
                 <p className="instruction instruction1">文字が出たらEnterキーを押してください！</p>
                 <h2 className="message">{message}</h2>
+                <p className="escape"><small>中断する場合はEscapeキーを押してください</small></p>
               </div> :
               (selected === "test2" ? 
               <div>
-                <p className="instruction instruction2">青色の文字が出たら「F」を、赤色の文字が出たら「J」を押してください！</p>
+                <p className="instruction instruction2">青色の文字が出たら「F」、赤色の文字が出たら「J」<br></br>を押してください！</p>
                 <h2 className="message" style={{ color }}>{message}</h2>
+                <p className="escape"><small>中断する場合はEscapeキーを押してください</small></p>
               </div> :
               <div>
-                <p className="instruction instruction3">「あお」と書かれた文字が出たら「F」を、「あか」と書かれた文字が出たら「J」を押してください！</p>
+                <p className="instruction instruction3">「あお」と書かれた文字が出たら「F」<br></br>「あか」と書かれた文字が出たら「J」<br></br>を押してください！</p>
                 <h2 className="message" style={{ color }}>{message}</h2>
+                <p className="escape"><small>中断する場合はEscapeキーを押してください</small></p>
               </div>
               ))
             }
@@ -501,9 +528,19 @@ function App() {
         <div className="popup-overlay">
           <div className="popup-content">
             <div className="center">
-              <p>間違えた入力により中断されました。</p>
-              <p>もう一度試してください。</p>
-              <p><button onClick={() => {setShowPopup2(false);setGameState("init");}}>OK</button></p>
+              <p className="explain-text">間違えた入力により中断されました。</p>
+              <p className="explain-text">もう一度試してください。</p>
+              <p className="button-text"><button className="large-button" onClick={() => {setShowPopup2(false);setGameState("init");}}>OK</button></p>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPopup4 && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <div className="center">
+              <p className="explain-text">中断されました</p>
+              <p className="button-text"><button className="large-button" onClick={() => {setShowPopup4(false);setGameState("init");}}>OK</button></p>
             </div>
           </div>
         </div>
@@ -512,13 +549,16 @@ function App() {
         <div className="popup-overlay">
         <div className="popup-content">
           <div className="center">
-            <p>あなたの反応時間結果</p>
-            <p>{reactionTime.join(', ')} ms</p>
-            <p><button onClick={() => {setShowPopup3(false);}}>OK</button></p>
+            <p className="explain-text">あなたの反応速度は</p>
+            <p className="explain-text">{reactionTime.join(', ')} ms</p>
+            <p></p>
+            <p className="explain-text">あなたは全体の上位{scoreRank}%以内です</p>
+            <p className="button-text"><button className="large-button" onClick={() => {setShowPopup3(false);}}>OK</button></p>
           </div>
         </div>
       </div>
       )}
+      <div className="footer"></div>
     </div>
   );
 }
@@ -600,4 +640,25 @@ function generateHistogramDataColor(red_values, blue_values, red_name, blue_name
     </ResponsiveContainer>
     </div>
   );
+}
+
+function median(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+
+  const sorted = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
+}
+
+function yourRank(all_data, your_data) {
+  let cnt = 1;
+  for (const data of all_data) {
+    if (data < your_data) {
+      cnt += 1;
+    }
+  }
+  return Math.ceil(cnt / all_data.length * 100)
 }

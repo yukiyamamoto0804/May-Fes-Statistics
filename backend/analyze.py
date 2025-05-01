@@ -15,12 +15,12 @@ class Analyze:
         self.tests = ["test1", "test2", "test3"]
         self.df_data = {}
         for test in self.tests:
-            self.median_data[test] = self.df_all_data[test].groupby("GroupId")["反応速度"].median().tolist()
             # 中央値の2倍以上のデータは外れ値と考える
             median_series = self.df_all_data[test].groupby("GroupId")["反応速度"].median()
             df = self.df_all_data[test].copy()
             df = df.merge(median_series.rename("中央値"), on="GroupId")
             self.df_data[test] = df[df["反応速度"] < df["中央値"] * 2]
+            self.median_data[test] = self.df_data[test].groupby("GroupId")["反応速度"].median().tolist()
             self.mean_data[test] = self.df_data[test].groupby("GroupId")["反応速度"].mean().tolist()
             # 各 groupid ごとの 反応速度 の平均を計算
             self.df_data[test]["group_means"] = self.df_data[test].groupby("GroupId")["反応速度"].transform("mean")
@@ -42,6 +42,9 @@ class Analyze:
         for test in self.tests:
             results[test] = {}
             mu, sigma = self.normal_MLE(self.median_data[test])
+            likelihood_normal = self.likelihood_function_normal(self.median_data[test], mu, sigma)
+            logmu, logsigma = self.log_MLE(self.median_data[test])
+            likelihood_log = self.likelihood_function_log(self.median_data[test], logmu, logsigma)
             # 分散として使いたい：差の2乗
             self.df_data[test]["squared_diff"] = self.df_data[test]["speed_diff_from_group_mean"] ** 2
             # groupid ごとに平均を集計
@@ -59,8 +62,14 @@ class Analyze:
             X = group_stats["group_means"].values.reshape(-1, 1)
             y = group_stats["squared_diff"].values
             coef, intercept, score = self.linear_regression(X, y)
+            print("対数正規分布", round(logmu, 4), round(logsigma, 6))
+            print("尤度", likelihood_normal, likelihood_log)
             results[test]["mu"] = round(mu, 1)
             results[test]["sigma"] = round(sigma, 0)
+            results[test]["logmu"] = round(logmu, 4)
+            results[test]["logsigma"] = round(logsigma, 6)
+            results[test]["likelihood_normal"] = round(likelihood_normal, 2)
+            results[test]["likelihood_log"] = round(likelihood_log, 2)
             results[test]["coef"] = coef
             results[test]["intercept"] = intercept
             results[test]["score"] = score
@@ -71,6 +80,7 @@ class Analyze:
         for test_i, test_j in combinations(self.tests, 2):
             result = {}
             result["pair"] = [test_i, test_j]
+            print(result["pair"])
             data_i = self.mean_data[test_i]
             data_j = self.mean_data[test_j]
             merged_data = []
@@ -78,16 +88,16 @@ class Analyze:
                 merged_data.append(x)
             for y in data_j:
                 merged_data.append(y)
-            mu_i, sigma_i = self.normal_MLE(data_i)
-            mu_j, sigma_j = self.normal_MLE(data_j)
-            mu, sigma = self.normal_MLE(merged_data)
-            l0 = self.likelihood_function_normal(data_i, mu_i, sigma_i) + self.likelihood_function_normal(
+            mu_i, sigma_i = self.log_MLE(data_i)
+            mu_j, sigma_j = self.log_MLE(data_j)
+            mu, sigma = self.log_MLE(merged_data)
+            l0 = self.likelihood_function_log(data_i, mu_i, sigma_i) + self.likelihood_function_log(
                 data_j, mu_j, sigma_j
             )
-            l1 = self.likelihood_function_normal(merged_data, mu, sigma)
+            l1 = self.likelihood_function_log(merged_data, mu, sigma)
             T = 2 * (l0 - l1)
             p_value = chi2.sf(T, 2)
-            result["p_value"] = (p_value,)
+            result["p_value"] = p_value
             results.append(result)
         return results
 
@@ -161,6 +171,13 @@ class Analyze:
         return mu, sigma
 
     @staticmethod
+    def log_MLE(data):
+        log_data = [math.log(x) for x in data]
+        mu = sum(log_data) / len(log_data)
+        sigma = sum([(x - mu) ** 2 for x in log_data]) / len(log_data)
+        return mu, sigma
+
+    @staticmethod
     def double_normal_MLE(data1, data2):
         mu1 = sum(data1) / len(data1)
         mu2 = sum(data2) / len(data2)
@@ -187,6 +204,14 @@ class Analyze:
         ans = 0
         for x in data:
             ans -= 1 / 2 * math.log(2 * math.pi) + 1 / 2 * math.log(sigma) + 1 / 2 * (x - mu) ** 2 / sigma
+        return ans
+    
+    @staticmethod
+    def likelihood_function_log(data, mu, sigma):
+        log_data = [math.log(x) for x in data]
+        ans = 0
+        for x in log_data:
+            ans -= 1 / 2 * math.log(2 * math.pi) + 1 / 2 * math.log(sigma) + x + 1 / 2 * (x - mu) ** 2 / sigma
         return ans
 
 

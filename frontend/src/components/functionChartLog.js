@@ -1,28 +1,28 @@
 // src/components/FunctionChart.jsx
 
 import {
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Tooltip,
+    CategoryScale,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Tooltip,
 } from "chart.js";
 import React from "react";
 import { Line } from "react-chartjs-2";
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Legend, Tooltip);
 
-const FunctionChartNormal = ({ mu1, sigma1, mu2, sigma2, mu3, sigma3 }) => {
+const FunctionChartLog = ({ mu1, sigma1, mu2, sigma2, mu3, sigma3 }) => {
   const xValues = [];
   for (let x = 0; x <= 1500; x += 2) {
     xValues.push(x.toFixed(1));
   }
 
   function normalPDF(x, mean = 0, sigma = 1) {
-    const coeff = 1 / (Math.sqrt(2 * Math.PI * sigma));
-    const exponent = -((x - mean) ** 2) / (2 * sigma);
+    const coeff = 1 / (Math.sqrt(2 * Math.PI * sigma) * x);
+    const exponent = -((Math.log(x) - mean) ** 2) / (2 * sigma);
     return coeff * Math.exp(exponent);
   }
 
@@ -78,4 +78,4 @@ const FunctionChartNormal = ({ mu1, sigma1, mu2, sigma2, mu3, sigma3 }) => {
   return <Line data={data} options={options} />;
 };
 
-export default FunctionChartNormal;
+export default FunctionChartLog;

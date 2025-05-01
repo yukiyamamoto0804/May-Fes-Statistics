@@ -78,6 +78,14 @@
 
 .game-button {
   margin: 0.6px 10px;
+  padding: 1rem 2rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  background-color: #ccc;
+  color: black;
+  border: none;
+  cursor: pointer;
 }
 
 /* 背景のオーバーレイ */
@@ -99,8 +107,8 @@
   background: #ffffff; /* 白背景 */
   padding: 0px;
   border-radius: 8px;
-  width: 400px;
-  height: 300px;
+  width: 500px;
+  height: 400px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
 }
@@ -110,7 +118,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 60px; /* 上部60px */
+  height: 100px; /* 上部60px */
   padding: 0px;
   margin: 0px;
   border-top-left-radius: 8px;
@@ -119,7 +127,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   color: #333;
 }
@@ -133,13 +141,21 @@
   align-items: center; /* 横方向の中央揃え */
 }
 
+.popup-content .explain-text {
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  align-items: center; /* 横方向の中央揃え */
+  margin: 0;
+}
+
 /* 下270pxの文字領域 */
 .popup-content .message {
   position: absolute;
-  bottom: 0;
+  bottom: 40px;
   left: 0;
   right: 0;
-  top: 30px; /* 上30px分は指示領域なので、その分だけ下げる */
+  top: 100px; /* 上30px分は指示領域なので、その分だけ下げる */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -147,6 +163,44 @@
   padding: 0px;
   font-size: 100px;
   color: #222;
+}
+
+.popup-content .button-text {
+  margin-top: 20px;
+  margin-bottom: -10px;
+}
+
+.popup-content .large-button {
+  padding: 1rem 2rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  background-color: #ccc;
+  color: black;
+  border: none;
+  cursor: pointer;
+}
+
+.popup-content .large-button:hover {
+  background-color: #999; /* ホバー時 */
+}
+
+.popup-content .escape {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto; /* 長いテキストがあればスクロール可能にする */
+  padding: 7px;
+  font-size: 18px;
+  color: #222;
+  margin: 0px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  background-color: #f0f0f0; /* 薄い灰色 */
 }
 
 /* ラジオボタンのコンテナ */
@@ -228,4 +282,8 @@
 
 .styled-table tbody tr:hover {
   background-color: #f1f1f1;
+}
+
+.footer {
+  height: 40px;
 }
