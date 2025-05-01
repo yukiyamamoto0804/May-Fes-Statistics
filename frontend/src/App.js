@@ -210,7 +210,7 @@ function App() {
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>反応速度統計</h1>
+      <h1>一瞬の勝負！反射神経テスト</h1>
       <div className="project-description">
         <h3>企画説明</h3>
         <p>統計分析手法の基礎的なものに「推定」と「検定」があります。<br></br>
