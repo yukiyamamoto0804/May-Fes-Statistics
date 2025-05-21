@@ -18,8 +18,10 @@
   },
   "scripts": {
     "start-backend": "cd ../backend && source .venv/bin/activate && python app.py",
+    "start-backend-w": "cd ../backend && python app.py",
     "start-frontend": "react-scripts start",
     "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "start-w": "concurrently \"npm run start-backend-w\" \"npm run start-frontend\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
